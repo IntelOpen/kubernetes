@@ -351,6 +351,44 @@ func (mounter *Mounter) IsLikelyNotMountPoint(file string) (bool, error) {
 	return true, nil
 }
 
+func GetMountDeviceFromPath(pathname string) (MountInfo, error) {
+	mountInfo := MountInfo{ID: -1, Major: -1, Minor: -1}
+	pathExists, pathErr := PathExists(pathname)
+	if !pathExists {
+		return MountInfo{}, nil
+	} else if IsCorruptedMnt(pathErr) {
+		klog.Warningf("GetMountRefs found corrupted mount at %s, treating as unmounted path", pathname)
+		return MountInfo{}, nil
+	} else if pathErr != nil {
+		return MountInfo{}, fmt.Errorf("error checking path %s: %v", pathname, pathErr)
+	}
+	realpath, err := filepath.EvalSymlinks(pathname)
+	if err != nil {
+		return MountInfo{}, err
+	}
+	// Parsing all Mount info in the machine, and find the mount info of the path's moubt point.
+	mis, err := ParseMountInfo(procMountInfoPath)
+	if err != nil {
+		return MountInfo{}, err
+	}
+	// Finding the underlying root path and major:minor if possible.
+	// We need search in backward order because it's possible for later mounts
+	// to overlap earlier mounts.
+	for i := len(mis) - 1; i >= 0; i-- {
+		if realpath == mis[i].MountPoint || PathWithinBase(realpath, mis[i].MountPoint) {
+			// If it's a mount point or path under a mount point.
+			mountInfo = mis[i]
+			break
+		}
+	}
+	if mountInfo.ID == -1 || mountInfo.Major == -1 || mountInfo.Minor == -1 {
+		return mountInfo, fmt.Errorf("failed to get root path and major:minor for %s", realpath)
+	}
+
+	return mountInfo, nil
+
+}
+
 // GetMountRefs finds all mount references to pathname, returns a
 // list of paths. Path could be a mountpoint or a normal
 // directory (for bind mount).

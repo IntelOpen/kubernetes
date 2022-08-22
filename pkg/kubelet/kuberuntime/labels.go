@@ -25,8 +25,10 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	kubetypes "k8s.io/apimachinery/pkg/types"
 	"k8s.io/klog/v2"
+	"k8s.io/kubernetes/cmd/kubeadm/app/constants"
 	kubecontainer "k8s.io/kubernetes/pkg/kubelet/container"
 	"k8s.io/kubernetes/pkg/kubelet/types"
+	"k8s.io/mount-utils"
 )
 
 const (
@@ -40,11 +42,29 @@ const (
 	containerTerminationMessagePolicyLabel = "io.kubernetes.container.terminationMessagePolicy"
 	containerPreStopHandlerLabel           = "io.kubernetes.container.preStopHandler"
 	containerPortsLabel                    = "io.kubernetes.container.ports"
+	containerBlockIOLimit                  = "intel.com/blockio.limits"
 	containerNetworkIOIngress              = "intel.com/network-ingress"
 	containerNetworkIOEgress               = "intel.com/network-egress"
 	podNetworkIOIngress                    = "kubernetes.io/ingress-bandwidth"
 	podNetworkIOEgress                     = "kubernetes.io/egress-bandwidth"
+	DiskDeviceMinor                        = 0
 )
+
+type BlockIoLimit struct {
+	// Major is the device's major number.
+	Major int `json:"major"`
+	// Minor is the device's minor number.
+	Minor int `json:"minor"`
+	// Rate is the IO rate limit per cgroup per device
+	Rate uint64 `json:"rate"`
+}
+
+type BlockIoLimitInfo struct {
+	DeviceReadBps   []BlockIoLimit `json:"device_read_bps,omitempty"`
+	DeviceWriteBps  []BlockIoLimit `json:"device_write_bps,omitempty"`
+	DeviceReadIOps  []BlockIoLimit `json:"device_read_iops,omitempty"`
+	DeviceWriteIOps []BlockIoLimit `json:"device_write_iops,omitempty"`
+}
 
 type labeledPodSandboxInfo struct {
 	// Labels from v1.Pod
@@ -122,6 +142,45 @@ func newPodAnnotations(pod *v1.Pod) map[string]string {
 	return annotations
 }
 
+// findEphemeralStorageDevice returns ephemeral storage mount device's major:minor
+func findEphemeralStorageDevice(kubeletPath string) (major, minor int, err error) {
+	mountInfo, err := mount.GetMountDeviceFromPath(kubeletPath)
+	if err != nil {
+		return -1, -1, fmt.Errorf("error finding ephemeral storage mount information: %v", err)
+	}
+	return mountInfo.Major, mountInfo.Minor, nil
+}
+
+func createBlockIoLimitAnnotation(rbps, wbps, riops, wiops uint64, kubeletPath string) string {
+	limits := BlockIoLimitInfo{}
+	major, _, err := findEphemeralStorageDevice(kubeletPath)
+	if err != nil {
+		klog.Error(err)
+		return ""
+	}
+	if rbps > 0 {
+		rbpsLimit := BlockIoLimit{Major: major, Minor: DiskDeviceMinor, Rate: rbps}
+		limits.DeviceReadBps = append(limits.DeviceReadBps, rbpsLimit)
+	}
+	if wbps > 0 {
+		wbpsLimit := BlockIoLimit{Major: major, Minor: DiskDeviceMinor, Rate: wbps}
+		limits.DeviceWriteBps = append(limits.DeviceReadBps, wbpsLimit)
+	}
+	if riops > 0 {
+		riopsLimit := BlockIoLimit{Major: major, Minor: DiskDeviceMinor, Rate: riops}
+		limits.DeviceReadIOps = append(limits.DeviceReadBps, riopsLimit)
+	}
+	if wiops > 0 {
+		wiopsLimit := BlockIoLimit{Major: major, Minor: DiskDeviceMinor, Rate: wiops}
+		limits.DeviceWriteIOps = append(limits.DeviceReadBps, wiopsLimit)
+	}
+	encoded, er := json.Marshal(limits)
+	if er != nil {
+		return ""
+	}
+	return string(encoded)
+}
+
 // newContainerLabels creates container labels from v1.Container and v1.Pod.
 func newContainerLabels(container *v1.Container, pod *v1.Pod) map[string]string {
 	labels := map[string]string{}
@@ -146,6 +205,11 @@ func newContainerAnnotations(container *v1.Container, pod *v1.Pod, restartCount 
 	annotations[containerRestartCountLabel] = strconv.Itoa(restartCount)
 	annotations[containerTerminationMessagePathLabel] = container.TerminationMessagePath
 	annotations[containerTerminationMessagePolicyLabel] = string(container.TerminationMessagePolicy)
+	// Add annotation here to pass blkio limit infos to container runtime.
+	limits := createBlockIoLimitAnnotation(10000, 10000, 10000, 10000, constants.KubeletRunDirectory)
+	if limits != "" {
+		annotations[containerBlockIOLimit] = limits
+	}
 
 	if val, ok := container.Resources.Limits[containerNetworkIOIngress]; ok {
 		annotations[containerNetworkIOIngress] = fmt.Sprintf("%sM", val.String())
