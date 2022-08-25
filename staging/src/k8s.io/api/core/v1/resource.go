@@ -50,6 +50,26 @@ func (rl *ResourceList) StorageEphemeral() *resource.Quantity {
 	return rl.Name(ResourceEphemeralStorage, resource.BinarySI)
 }
 
+// EphemeralRBPS returns the list of ephemeral storage volumes, if any
+func (rl *ResourceList) EphemeralRBPS() *resource.Quantity {
+	return rl.Name(ResourceEphemeralRBPS, resource.BinarySI)
+}
+
+// EphemeralRIOPS returns the list of ephemeral storage volumes, if any
+func (rl *ResourceList) EphemeralRIOPS() *resource.Quantity {
+	return rl.Name(ResourceEphemeralRIOPS, resource.BinarySI)
+}
+
+// EphemeralWBPS returns the list of ephemeral storage volumes, if any
+func (rl *ResourceList) EphemeralWBPS() *resource.Quantity {
+	return rl.Name(ResourceEphemeralWBPS, resource.BinarySI)
+}
+
+// EphemeralWIOPS returns the list of ephemeral storage volumes, if any
+func (rl *ResourceList) EphemeralWIOPS() *resource.Quantity {
+	return rl.Name(ResourceEphemeralWIOPS, resource.BinarySI)
+}
+
 // Name returns the resource with name if specified, otherwise it returns a nil quantity with default format.
 func (rl *ResourceList) Name(name ResourceName, defaultFormat resource.Format) *resource.Quantity {
 	if val, ok := (*rl)[name]; ok {

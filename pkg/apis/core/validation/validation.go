@@ -2332,7 +2332,8 @@ var validEnvDownwardAPIFieldPathExpressions = sets.NewString(
 	"status.podIP",
 	"status.podIPs")
 
-var validContainerResourceFieldPathExpressions = sets.NewString("limits.cpu", "limits.memory", "limits.ephemeral-storage", "requests.cpu", "requests.memory", "requests.ephemeral-storage")
+var validContainerResourceFieldPathExpressions = sets.NewString("limits.cpu", "limits.memory", "limits.ephemeral-riops", "limits.limits.ephemeral-wiops", "limits.limits.ephemeral-rbps", "limits.ephemeral-wbps",
+	"limits.ephemeral-storage", "requests.cpu", "requests.memory", "requests.ephemeral-storage", "requests.ephemeral-riops", "requests.ephemeral-wiops", "requests.ephemeral-rbps", "requests.ephemeral-wbps")
 
 // NOTE: this is only valid with DownwardAPIHugePages enabled
 var validContainerResourceFieldPathPrefixes = sets.NewString()
@@ -5677,7 +5678,7 @@ func ValidateResourceRequirements(requirements *core.ResourceRequirements, fldPa
 	reqContainsCPUOrMemory := false
 	limContainsHugePages := false
 	reqContainsHugePages := false
-	supportedQoSComputeResources := sets.NewString(string(core.ResourceCPU), string(core.ResourceMemory))
+	supportedQoSComputeResources := sets.NewString(string(core.ResourceCPU), string(core.ResourceMemory), string(core.ResourceEphemeralRBPS), string(core.ResourceEphemeralRIOPS), string(core.ResourceEphemeralWBPS), string(core.ResourceEphemeralWIOPS))
 	for resourceName, quantity := range requirements.Limits {
 
 		fldPath := limPath.Key(string(resourceName))

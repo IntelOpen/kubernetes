@@ -89,10 +89,22 @@ func isExtendedResourceNameForQuota(name corev1.ResourceName) bool {
 var validationSet = sets.NewString(
 	string(corev1.ResourceCPU),
 	string(corev1.ResourceMemory),
+	string(corev1.ResourceEphemeralRBPS),
+	string(corev1.ResourceEphemeralRIOPS),
+	string(corev1.ResourceEphemeralWBPS),
+	string(corev1.ResourceEphemeralWIOPS),
 	string(corev1.ResourceRequestsCPU),
 	string(corev1.ResourceRequestsMemory),
+	string(corev1.ResourceRequestsEphemeralRBPS),
+	string(corev1.ResourceRequestsEphemeralRIOPS),
+	string(corev1.ResourceRequestsEphemeralWBPS),
+	string(corev1.ResourceRequestsEphemeralWIOPS),
 	string(corev1.ResourceLimitsCPU),
 	string(corev1.ResourceLimitsMemory),
+	string(corev1.ResourceLimitsEphemeralRBPS),
+	string(corev1.ResourceLimitsEphemeralRIOPS),
+	string(corev1.ResourceLimitsEphemeralWBPS),
+	string(corev1.ResourceLimitsEphemeralWIOPS),
 )
 
 // NewPodEvaluator returns an evaluator that can evaluate pods
@@ -274,6 +286,37 @@ func podComputeUsageHelper(requests corev1.ResourceList, limits corev1.ResourceL
 	if limit, found := limits[corev1.ResourceEphemeralStorage]; found {
 		result[corev1.ResourceLimitsEphemeralStorage] = limit
 	}
+	if request, found := requests[corev1.ResourceEphemeralRBPS]; found {
+		result[corev1.ResourceEphemeralRBPS] = request
+		result[corev1.ResourceRequestsEphemeralRBPS] = request
+	}
+	if limit, found := limits[corev1.ResourceEphemeralRBPS]; found {
+		result[corev1.ResourceLimitsEphemeralRBPS] = limit
+	}
+	if request, found := requests[corev1.ResourceEphemeralRIOPS]; found {
+		result[corev1.ResourceEphemeralRIOPS] = request
+		result[corev1.ResourceRequestsEphemeralRIOPS] = request
+	}
+	if limit, found := limits[corev1.ResourceEphemeralRIOPS]; found {
+		result[corev1.ResourceLimitsEphemeralRIOPS] = limit
+	}
+
+	if request, found := requests[corev1.ResourceEphemeralWBPS]; found {
+		result[corev1.ResourceEphemeralWBPS] = request
+		result[corev1.ResourceRequestsEphemeralWBPS] = request
+	}
+	if limit, found := limits[corev1.ResourceEphemeralWBPS]; found {
+		result[corev1.ResourceLimitsEphemeralWBPS] = limit
+	}
+
+	if request, found := requests[corev1.ResourceEphemeralWIOPS]; found {
+		result[corev1.ResourceEphemeralWIOPS] = request
+		result[corev1.ResourceRequestsEphemeralWIOPS] = request
+	}
+	if limit, found := limits[corev1.ResourceEphemeralWIOPS]; found {
+		result[corev1.ResourceLimitsEphemeralWIOPS] = limit
+	}
+
 	for resource, request := range requests {
 		// for resources with certain prefix, e.g. hugepages
 		if quota.ContainsPrefix(requestedResourcePrefixes, resource) {

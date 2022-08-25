@@ -101,12 +101,28 @@ func ExtractContainerResourceValue(fs *corev1.ResourceFieldSelector, container *
 		return convertResourceMemoryToString(container.Resources.Limits.Memory(), divisor)
 	case "limits.ephemeral-storage":
 		return convertResourceEphemeralStorageToString(container.Resources.Limits.StorageEphemeral(), divisor)
+	case "limits.ephemeral-rbps":
+		return convertResourceEphemeralRBPSToString(container.Resources.Limits.EphemeralRBPS(), divisor)
+	case "limits.ephemeral-riops":
+		return convertResourceEphemeralRIOPSToString(container.Resources.Limits.EphemeralRIOPS(), divisor)
+	case "limits.ephemeral-wbps":
+		return convertResourceEphemeralWBPSToString(container.Resources.Limits.EphemeralWBPS(), divisor)
+	case "limits.ephemeral-wiops":
+		return convertResourceEphemeralWIOPSToString(container.Resources.Limits.EphemeralWIOPS(), divisor)
 	case "requests.cpu":
 		return convertResourceCPUToString(container.Resources.Requests.Cpu(), divisor)
 	case "requests.memory":
 		return convertResourceMemoryToString(container.Resources.Requests.Memory(), divisor)
 	case "requests.ephemeral-storage":
 		return convertResourceEphemeralStorageToString(container.Resources.Requests.StorageEphemeral(), divisor)
+	case "requests.ephemeral-rbps":
+		return convertResourceEphemeralRBPSToString(container.Resources.Requests.EphemeralRBPS(), divisor)
+	case "requests.ephemeral-riops":
+		return convertResourceEphemeralRIOPSToString(container.Resources.Requests.EphemeralRIOPS(), divisor)
+	case "requests.ephemeral-wbps":
+		return convertResourceEphemeralWBPSToString(container.Resources.Requests.EphemeralWBPS(), divisor)
+	case "requests.ephemeral-wiops":
+		return convertResourceEphemeralWIOPSToString(container.Resources.Requests.EphemeralWIOPS(), divisor)
 	}
 	// handle extended standard resources with dynamic names
 	// example: requests.hugepages-<pageSize> or limits.hugepages-<pageSize>
@@ -150,6 +166,34 @@ func convertResourceHugePagesToString(hugePages *resource.Quantity, divisor reso
 // ceiling of the value.
 func convertResourceEphemeralStorageToString(ephemeralStorage *resource.Quantity, divisor resource.Quantity) (string, error) {
 	m := int64(math.Ceil(float64(ephemeralStorage.Value()) / float64(divisor.Value())))
+	return strconv.FormatInt(m, 10), nil
+}
+
+// convertResourceEphemeralRBPSToString converts ephemeral storage value to the format of divisor and returns
+// ceiling of the value.
+func convertResourceEphemeralRBPSToString(ephemeralRBPS *resource.Quantity, divisor resource.Quantity) (string, error) {
+	m := int64(math.Ceil(float64(ephemeralRBPS.Value()) / float64(divisor.Value())))
+	return strconv.FormatInt(m, 10), nil
+}
+
+// convertResourceEphemeralRIOPSToString converts ephemeral storage value to the format of divisor and returns
+// ceiling of the value.
+func convertResourceEphemeralRIOPSToString(ephemeralRIOPS *resource.Quantity, divisor resource.Quantity) (string, error) {
+	m := int64(math.Ceil(float64(ephemeralRIOPS.Value()) / float64(divisor.Value())))
+	return strconv.FormatInt(m, 10), nil
+}
+
+// convertResourceEphemeralWBPSToString converts ephemeral storage value to the format of divisor and returns
+// ceiling of the value.
+func convertResourceEphemeralWBPSToString(ephemeralWBPS *resource.Quantity, divisor resource.Quantity) (string, error) {
+	m := int64(math.Ceil(float64(ephemeralWBPS.Value()) / float64(divisor.Value())))
+	return strconv.FormatInt(m, 10), nil
+}
+
+// convertResourceEphemeralWIOPSToString converts ephemeral storage value to the format of divisor and returns
+// ceiling of the value.
+func convertResourceEphemeralWIOPSToString(ephemeralWIOPS *resource.Quantity, divisor resource.Quantity) (string, error) {
+	m := int64(math.Ceil(float64(ephemeralWIOPS.Value()) / float64(divisor.Value())))
 	return strconv.FormatInt(m, 10), nil
 }
 

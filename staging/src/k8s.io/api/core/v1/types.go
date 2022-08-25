@@ -5187,6 +5187,14 @@ const (
 	// Local ephemeral storage, in bytes. (500Gi = 500GiB = 500 * 1024 * 1024 * 1024)
 	// The resource name for ResourceEphemeralStorage is alpha and it can change across releases.
 	ResourceEphemeralStorage ResourceName = "ephemeral-storage"
+	// Local ephemeral rbps, in bps. (500Gi = 500GiBps = 500 * 1024 * 1024 * 1024)
+	ResourceEphemeralRBPS ResourceName = "ephemeral-rbps"
+	// Local ephemeral riops, in iops.
+	ResourceEphemeralRIOPS ResourceName = "ephemeral-riops"
+	// Local ephemeral wbps, in bps. (500Gi = 500GiB = 500 * 1024 * 1024 * 1024)
+	ResourceEphemeralWBPS ResourceName = "ephemeral-wbps"
+	// Local ephemeral wiops, in iops.
+	ResourceEphemeralWIOPS ResourceName = "ephemeral-wiops"
 )
 
 const (
@@ -5881,12 +5889,20 @@ const (
 	ResourceRequestsStorage ResourceName = "requests.storage"
 	// Local ephemeral storage request, in bytes. (500Gi = 500GiB = 500 * 1024 * 1024 * 1024)
 	ResourceRequestsEphemeralStorage ResourceName = "requests.ephemeral-storage"
+	ResourceRequestsEphemeralRBPS    ResourceName = "requests.ephemeral-rbps"
+	ResourceRequestsEphemeralWBPS    ResourceName = "requests.ephemeral-wbps"
+	ResourceRequestsEphemeralRIOPS   ResourceName = "requests.ephemeral-riops"
+	ResourceRequestsEphemeralWIOPS   ResourceName = "requests.ephemeral-wiops"
 	// CPU limit, in cores. (500m = .5 cores)
 	ResourceLimitsCPU ResourceName = "limits.cpu"
 	// Memory limit, in bytes. (500Gi = 500GiB = 500 * 1024 * 1024 * 1024)
 	ResourceLimitsMemory ResourceName = "limits.memory"
 	// Local ephemeral storage limit, in bytes. (500Gi = 500GiB = 500 * 1024 * 1024 * 1024)
 	ResourceLimitsEphemeralStorage ResourceName = "limits.ephemeral-storage"
+	ResourceLimitsEphemeralRBPS    ResourceName = "limits.ephemeral-rbps"
+	ResourceLimitsEphemeralWBPS    ResourceName = "limits.ephemeral-wbps"
+	ResourceLimitsEphemeralRIOPS   ResourceName = "limits.ephemeral-riops"
+	ResourceLimitsEphemeralWIOPS   ResourceName = "limits.ephemeral-wiops"
 )
 
 // The following identify resource prefix for Kubernetes object types

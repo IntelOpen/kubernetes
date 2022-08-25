@@ -24,7 +24,7 @@ import (
 	"k8s.io/kubernetes/pkg/apis/core"
 )
 
-var supportedQoSComputeResources = sets.NewString(string(core.ResourceCPU), string(core.ResourceMemory))
+var supportedQoSComputeResources = sets.NewString(string(core.ResourceCPU), string(core.ResourceMemory), string(core.ResourceEphemeralRBPS), string(core.ResourceEphemeralRIOPS), string(core.ResourceEphemeralWBPS), string(core.ResourceEphemeralWIOPS))
 
 func isSupportedQoSComputeResource(name core.ResourceName) bool {
 	return supportedQoSComputeResources.Has(string(name))
@@ -77,7 +77,7 @@ func GetPodQOS(pod *core.Pod) core.PodQOSClass {
 			}
 		}
 
-		if !qosLimitsFound.HasAll(string(core.ResourceMemory), string(core.ResourceCPU)) {
+		if !qosLimitsFound.HasAll(string(core.ResourceMemory), string(core.ResourceCPU), string(core.ResourceEphemeralRBPS), string(core.ResourceEphemeralRIOPS), string(core.ResourceEphemeralWBPS), string(core.ResourceEphemeralWIOPS)) {
 			isGuaranteed = false
 		}
 	}
