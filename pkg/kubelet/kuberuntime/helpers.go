@@ -407,15 +407,15 @@ func createBlockIoLimitAnnotation(container *v1.Container, kubeletPath string) s
 	}
 	if wbps > 0 {
 		wbpsLimit := BlockIoLimit{Major: major, Minor: DiskDeviceMinor, Rate: wbps}
-		limits.DeviceWriteBps = append(limits.DeviceReadBps, wbpsLimit)
+		limits.DeviceWriteBps = append(limits.DeviceWriteBps, wbpsLimit)
 	}
 	if riops > 0 {
 		riopsLimit := BlockIoLimit{Major: major, Minor: DiskDeviceMinor, Rate: riops}
-		limits.DeviceReadIOps = append(limits.DeviceReadBps, riopsLimit)
+		limits.DeviceReadIOps = append(limits.DeviceReadIOps, riopsLimit)
 	}
 	if wiops > 0 {
 		wiopsLimit := BlockIoLimit{Major: major, Minor: DiskDeviceMinor, Rate: wiops}
-		limits.DeviceWriteIOps = append(limits.DeviceReadBps, wiopsLimit)
+		limits.DeviceWriteIOps = append(limits.DeviceWriteIOps, wiopsLimit)
 	}
 	encoded, er := json.Marshal(limits)
 	if er != nil {
