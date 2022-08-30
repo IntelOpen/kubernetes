@@ -20,6 +20,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	v1 "k8s.io/api/core/v1"
@@ -144,5 +145,19 @@ func ClearNominatedNodeName(cs kubernetes.Interface, pods ...*v1.Pod) utilerrors
 // IsScalarResourceName validates the resource for Extended, Hugepages, Native and AttachableVolume resources
 func IsScalarResourceName(name v1.ResourceName) bool {
 	return v1helper.IsExtendedResourceName(name) || v1helper.IsHugePageResourceName(name) ||
-		v1helper.IsPrefixedNativeResource(name) || v1helper.IsAttachableVolumeResourceName(name)
+		v1helper.IsPrefixedNativeResource(name) || v1helper.IsAttachableVolumeResourceName(name) ||
+		v1helper.IsBlockIOResourceName(name)
+}
+
+// Set scalar resource name by value
+func GetScalarResourceName(name v1.ResourceName) v1.ResourceName {
+	if !v1helper.IsBlockIOResourceName(name) {
+		return name
+	}
+	rName := string(name)
+	if index := strings.LastIndex(rName, "-"); index > 0 {
+		suffix := strings.ToLower(rName[index+2:])
+		return v1.ResourceName(v1.ResourceEphemeralPrefix + suffix)
+	}
+	return name
 }

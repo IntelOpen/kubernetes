@@ -203,6 +203,10 @@ var standardContainerResources = sets.NewString(
 	string(corev1.ResourceEphemeralStorage),
 )
 
+const (
+	resourceNamePrefix = "ephemeral-"
+)
+
 // IsStandardContainerResourceName returns true if the container can make a resource request
 // for the specified resource
 func IsStandardContainerResourceName(str string) bool {
@@ -213,4 +217,25 @@ func IsStandardContainerResourceName(str string) bool {
 // resource prefix.
 func IsHugePageResourceName(name corev1.ResourceName) bool {
 	return strings.HasPrefix(string(name), corev1.ResourceHugePagesPrefix)
+}
+
+// IsBlockIOResourceName returns true if the resource name has the ephemeral
+// disk prefix.
+func IsBlockIOResourceName(name string) bool {
+	return strings.HasPrefix(name, corev1.ResourceEphemeralPrefix)
+}
+
+// convert block io resource capacity name to a list of resource names
+func GetBlockIOResourceName(name string) []corev1.ResourceName {
+	converted := []corev1.ResourceName{}
+	if !IsBlockIOResourceName(name) {
+		return converted
+	}
+	if index := strings.LastIndex(name, "-"); index > 0 {
+		suffix := name[index+1:]
+		// for mode
+		converted = append(converted, corev1.ResourceName(resourceNamePrefix+"r"+suffix))
+		converted = append(converted, corev1.ResourceName(resourceNamePrefix+"w"+suffix))
+	}
+	return converted
 }

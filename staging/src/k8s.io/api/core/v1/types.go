@@ -5206,6 +5206,8 @@ const (
 	ResourceAttachableVolumesPrefix = "attachable-volumes-"
 	// Name prefix for network io
 	ResourceNetworkIOPrefix = "intel.com/network"
+	// Name prefix for block io scalar resource
+	ResourceEphemeralPrefix = "intel.com/ephemeral-"
 )
 
 // ResourceList is a set of (resource name, quantity) pairs.

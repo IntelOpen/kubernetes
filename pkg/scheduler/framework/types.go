@@ -477,7 +477,8 @@ func (r *Resource) Clone() *Resource {
 
 // AddScalar adds a resource by a scalar value of this resource.
 func (r *Resource) AddScalar(name v1.ResourceName, quantity int64) {
-	r.SetScalar(name, r.ScalarResources[name]+quantity)
+	rName := schedutil.GetScalarResourceName(name)
+	r.SetScalar(rName, r.ScalarResources[rName]+quantity)
 }
 
 // SetScalar sets a resource by a scalar value of this resource.

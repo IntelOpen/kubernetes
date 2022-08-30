@@ -4127,7 +4127,17 @@ func describeNodeResource(nodeNonTerminatedPodsList *corev1.PodList, node *corev
 	}
 
 	for _, ext := range extResources {
-		extRequests, extLimits := reqs[corev1.ResourceName(ext)], limits[corev1.ResourceName(ext)]
+		extRequests, extLimits := resource.Quantity{}, resource.Quantity{}
+		if resourcehelper.IsBlockIOResourceName(ext) {
+			resourceNames := resourcehelper.GetBlockIOResourceName(ext)
+			for _, resourceName := range resourceNames {
+				fmt.Println("resource name: " + resourceName)
+				extRequests.Add(reqs[resourceName])
+				extLimits.Add(limits[resourceName])
+			}
+		} else {
+			extRequests, extLimits = reqs[corev1.ResourceName(ext)], limits[corev1.ResourceName(ext)]
+		}
 		w.Write(LEVEL_1, "%s\t%s\t%s\n", ext, extRequests.String(), extLimits.String())
 	}
 }

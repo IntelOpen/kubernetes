@@ -65,6 +65,12 @@ func IsHugePageResourceName(name v1.ResourceName) bool {
 	return strings.HasPrefix(string(name), v1.ResourceHugePagesPrefix)
 }
 
+// IsBlockIOResourceName returns true if the resource name has the ephemeral
+// disk prefix.
+func IsBlockIOResourceName(name v1.ResourceName) bool {
+	return strings.HasPrefix(string(name), v1.ResourceEphemeralPrefix[strings.LastIndex(v1.ResourceEphemeralPrefix, "/")+1:])
+}
+
 // HugePageResourceName returns a ResourceName with the canonical hugepage
 // prefix prepended for the specified page size.  The page size is converted
 // to its canonical representation.
