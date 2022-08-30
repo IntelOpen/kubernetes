@@ -17,6 +17,7 @@ limitations under the License.
 package kuberuntime
 
 import (
+	"encoding/json"
 	"fmt"
 	"path/filepath"
 	"strconv"
@@ -360,4 +361,65 @@ func namespacesForPod(pod *v1.Pod) *runtimeapi.NamespaceOption {
 		Network: networkNamespaceForPod(pod),
 		Pid:     pidNamespaceForPod(pod),
 	}
+}
+
+// createBlockIoLimitAnnotation get container's block io limits and block device major:minor.
+// It returns container's annotation string to configure container's block io.
+func createBlockIoLimitAnnotation(container *v1.Container, kubeletPath string) string {
+	var rbps, wbps, riops, wiops int64
+	limits := BlockIoLimitInfo{}
+	if rbpsQuantity, exist := container.Resources.Requests[v1.ResourceEphemeralRBPS]; exist {
+		if value, ok := rbpsQuantity.AsInt64(); ok {
+			rbps = value
+		}
+	} else {
+		rbps = -1
+	}
+	if riopsQuantity, exist := container.Resources.Requests[v1.ResourceEphemeralRIOPS]; exist {
+		if value, ok := riopsQuantity.AsInt64(); ok {
+			riops = value
+		}
+	} else {
+		riops = -1
+	}
+	if wbpsQuantity, exist := container.Resources.Requests[v1.ResourceEphemeralWBPS]; exist {
+		if value, ok := wbpsQuantity.AsInt64(); ok {
+			wbps = value
+		}
+	} else {
+		wbps = -1
+	}
+	if wiopsQuantity, exist := container.Resources.Requests[v1.ResourceEphemeralWIOPS]; exist {
+		if value, ok := wiopsQuantity.AsInt64(); ok {
+			wiops = value
+		}
+	} else {
+		wiops = -1
+	}
+	major, _, err := findEphemeralStorageDevice(kubeletPath)
+	if err != nil {
+		klog.Error(err)
+		return ""
+	}
+	if rbps > 0 {
+		rbpsLimit := BlockIoLimit{Major: major, Minor: DiskDeviceMinor, Rate: rbps}
+		limits.DeviceReadBps = append(limits.DeviceReadBps, rbpsLimit)
+	}
+	if wbps > 0 {
+		wbpsLimit := BlockIoLimit{Major: major, Minor: DiskDeviceMinor, Rate: wbps}
+		limits.DeviceWriteBps = append(limits.DeviceWriteBps, wbpsLimit)
+	}
+	if riops > 0 {
+		riopsLimit := BlockIoLimit{Major: major, Minor: DiskDeviceMinor, Rate: riops}
+		limits.DeviceReadIOps = append(limits.DeviceReadIOps, riopsLimit)
+	}
+	if wiops > 0 {
+		wiopsLimit := BlockIoLimit{Major: major, Minor: DiskDeviceMinor, Rate: wiops}
+		limits.DeviceWriteIOps = append(limits.DeviceWriteIOps, wiopsLimit)
+	}
+	encoded, er := json.Marshal(limits)
+	if er != nil {
+		return ""
+	}
+	return string(encoded)
 }

@@ -56,7 +56,7 @@ type BlockIoLimit struct {
 	// Minor is the device's minor number.
 	Minor int `json:"minor"`
 	// Rate is the IO rate limit per cgroup per device
-	Rate uint64 `json:"rate"`
+	Rate int64 `json:"rate"`
 }
 
 type BlockIoLimitInfo struct {
@@ -151,36 +151,6 @@ func findEphemeralStorageDevice(kubeletPath string) (major, minor int, err error
 	return mountInfo.Major, mountInfo.Minor, nil
 }
 
-func createBlockIoLimitAnnotation(rbps, wbps, riops, wiops uint64, kubeletPath string) string {
-	limits := BlockIoLimitInfo{}
-	major, _, err := findEphemeralStorageDevice(kubeletPath)
-	if err != nil {
-		klog.Error(err)
-		return ""
-	}
-	if rbps > 0 {
-		rbpsLimit := BlockIoLimit{Major: major, Minor: DiskDeviceMinor, Rate: rbps}
-		limits.DeviceReadBps = append(limits.DeviceReadBps, rbpsLimit)
-	}
-	if wbps > 0 {
-		wbpsLimit := BlockIoLimit{Major: major, Minor: DiskDeviceMinor, Rate: wbps}
-		limits.DeviceWriteBps = append(limits.DeviceReadBps, wbpsLimit)
-	}
-	if riops > 0 {
-		riopsLimit := BlockIoLimit{Major: major, Minor: DiskDeviceMinor, Rate: riops}
-		limits.DeviceReadIOps = append(limits.DeviceReadBps, riopsLimit)
-	}
-	if wiops > 0 {
-		wiopsLimit := BlockIoLimit{Major: major, Minor: DiskDeviceMinor, Rate: wiops}
-		limits.DeviceWriteIOps = append(limits.DeviceReadBps, wiopsLimit)
-	}
-	encoded, er := json.Marshal(limits)
-	if er != nil {
-		return ""
-	}
-	return string(encoded)
-}
-
 // newContainerLabels creates container labels from v1.Container and v1.Pod.
 func newContainerLabels(container *v1.Container, pod *v1.Pod) map[string]string {
 	labels := map[string]string{}
@@ -205,12 +175,9 @@ func newContainerAnnotations(container *v1.Container, pod *v1.Pod, restartCount 
 	annotations[containerRestartCountLabel] = strconv.Itoa(restartCount)
 	annotations[containerTerminationMessagePathLabel] = container.TerminationMessagePath
 	annotations[containerTerminationMessagePolicyLabel] = string(container.TerminationMessagePolicy)
-	// Add annotation here to pass blkio limit infos to container runtime.
-	limits := createBlockIoLimitAnnotation(10000, 10000, 10000, 10000, constants.KubeletRunDirectory)
-	if limits != "" {
+	if limits := createBlockIoLimitAnnotation(container, constants.KubeletRunDirectory); limits != "" {
 		annotations[containerBlockIOLimit] = limits
 	}
-
 	if val, ok := container.Resources.Limits[containerNetworkIOIngress]; ok {
 		annotations[containerNetworkIOIngress] = fmt.Sprintf("%sM", val.String())
 	}
